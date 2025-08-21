@@ -13,3 +13,4 @@ cohere
 numpy
 openpyxl
 sentence-transformers
+langchain-huggingface
