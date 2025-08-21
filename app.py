@@ -351,7 +351,7 @@ if user_question:
         if documents:
             chunks = chunk_documents(documents, RAG_CHUNK_SIZE, RAG_CHUNK_OVERLAP)
             if chunks:
-                dense_retriever, sparse_retriever, reranker = setup_rag_retrievers(documents, chunks, RAG_EMBEDDING_MODEL, COHERE_API_KEY)
+                dense_retriever, sparse_retriever, reranker = setup_rag_retrievers(documents, _chunks, RAG_EMBEDDING_MODEL, COHERE_API_KEY)
                 if dense_retriever and sparse_retriever and reranker:
                     retrieved_chunks = hybrid_retrieval(user_question, dense_retriever, sparse_retriever, reranker)
                     if retrieved_chunks:
