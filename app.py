@@ -22,7 +22,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_community.retrievers import BM25Retriever
 from langchain.prompts import PromptTemplate
-# Updated import for HuggingFacePipeline
+# from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_huggingface import HuggingFacePipeline
 from langchain_cohere import CohereRerank
 import cohere
@@ -58,9 +58,8 @@ RAG_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 RAG_GENERATION_MODEL = "distilgpt2" # Using distilgpt2 as in the notebook
 FT_MODEL_GPT2 = "gpt2-medium" # Using gpt2-medium as in the notebook
 FT_MODEL_FLAN_T5 = "google/flan-t5-small" # Using flan-t5-small as in the notebook
-# Updated paths to use relative paths, assuming data files are in the same repo as app.py
-FINETUNE_DATA_PATH = "jpmc_finetune.jsonl"
-FINANCIAL_DATA_PATH = "JPMC_Financials.xlsx"
+FINETUNE_DATA_PATH = "jpmc_finetune.jsonl" # Assuming this is accessible in the deployed environment or you'll adjust the path
+FINANCIAL_DATA_PATH = "JPMC_Financials.xlsx" # Assuming this is accessible in the deployed environment or you'll adjust the path
 
 # --- Data Loading and Processing ---
 @st.cache_resource
@@ -109,11 +108,11 @@ def chunk_documents(_documents, chunk_size, chunk_overlap):
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap
     )
-    chunks = text_splitter.split_documents(_documents)
+    _chunks = text_splitter.split_documents(_documents)
     processed_chunks = []
     source_id = "JPMC2024" # Or dynamically generate based on file name/timestamp
     size = chunk_size # Use the actual chunk size used
-    for i, chunk in enumerate(chunks):
+    for i, chunk in enumerate(_chunks):
         chunk_id = f"{source_id}_size{size}_chunk{i+1}"
         metadata = {
             "source_id": source_id,
@@ -129,17 +128,16 @@ def chunk_documents(_documents, chunk_size, chunk_overlap):
 
 # --- RAG Components ---
 @st.cache_resource
-def setup_rag_retrievers(documents, chunks, embedding_model_name, cohere_api_key):
+def setup_rag_retrievers(_documents,_chunks, embedding_model_name, cohere_api_key):
     """Sets up the Chroma vector store, BM25 retriever, and Cohere re-ranker."""
-    if not documents or not chunks:
+    if not _documents or not _chunks:
         return None, None, None
 
     try:
         # Dense Retriever (ChromaDB)
         embeddings = HuggingFaceEmbeddings(model_name=embedding_model_name)
-        # Pass chunks using the keyword argument again
         vector_store = Chroma.from_documents(
-            documents=chunks, # Use chunks for the vector store
+            documents=_chunks, # Use chunks for the vector store
             embedding=embeddings
         )
         dense_retriever = vector_store.as_retriever(search_kwargs={"k": 5}) # Retrieve top 5 for dense
@@ -229,11 +227,15 @@ def generate_rag_answer(query, retrieved_chunks, llm):
     context = "\n\n".join([doc.page_content for doc in retrieved_chunks])
 
     # Define the prompt template
-    # Simplified template
-    template = """Context: {context}
-Question: {question}
-Answer:""" # Minimal structure
+    template = """
+    Answer the question based only on the following context:
 
+    {context}
+
+    Question: {question}
+
+    Answer:
+    """
     prompt = PromptTemplate.from_template(template)
 
     try:
@@ -249,21 +251,8 @@ Answer:""" # Minimal structure
         response_text = final_response.strip()
         answer_prefix = "Answer:"
         if answer_prefix in response_text:
-             # Find the text after "Answer:"
-            answer_text_parts = response_text.split(answer_prefix, 1)
-            if len(answer_text_parts) > 1:
-                response_text = answer_text_parts[1].strip()
-            else:
-                # If "Answer:" is present but nothing follows, use the original text
-                pass # Keep the original echoed prompt for now
-
-        # Additional post-processing to remove potential trailing prompt parts
-        # Check if the remaining text still contains parts of the prompt
-        if "Context:" in response_text:
-             response_text = response_text.split("Context:")[0].strip()
-        if "Question:" in response_text:
-             response_text = response_text.split("Question:")[0].strip()
-
+             # Find the last occurrence of "Answer:" and take everything after it
+            response_text = response_text.rsplit(answer_prefix, 1)[-1].strip()
 
         return response_text
     except Exception as e:
@@ -365,26 +354,21 @@ if user_question:
         # Load and process data for RAG
         documents = load_and_process_financial_data(FINANCIAL_DATA_PATH)
         if documents:
-            chunks = chunk_documents(documents, RAG_CHUNK_SIZE, RAG_CHUNK_OVERLAP)
-            if chunks:
-                # Check if chunks is not empty before calling setup_rag_retrievers
-                if chunks:
-                    dense_retriever, sparse_retriever, reranker = setup_rag_retrievers(documents, chunks, RAG_EMBEDDING_MODEL, COHERE_API_KEY)
-                    if dense_retriever and sparse_retriever and reranker:
-                        retrieved_chunks = hybrid_retrieval(user_question, dense_retriever, sparse_retriever, reranker)
-                        if retrieved_chunks:
-                            rag_llm, rag_tokenizer = setup_rag_llm(RAG_GENERATION_MODEL)
-                            if rag_llm:
-                                answer = generate_rag_answer(user_question, retrieved_chunks, rag_llm)
-                            else:
-                                answer = "Failed to load the RAG generation model."
+            _chunks = chunk_documents(documents, RAG_CHUNK_SIZE, RAG_CHUNK_OVERLAP)
+            if _chunks:
+                dense_retriever, sparse_retriever, reranker = setup_rag_retrievers(documents, _chunks, RAG_EMBEDDING_MODEL, COHERE_API_KEY)
+                if dense_retriever and sparse_retriever and reranker:
+                    retrieved_chunks = hybrid_retrieval(user_question, dense_retriever, sparse_retriever, reranker)
+                    if retrieved_chunks:
+                        rag_llm, rag_tokenizer = setup_rag_llm(RAG_GENERATION_MODEL)
+                        if rag_llm:
+                            answer = generate_rag_answer(user_question, retrieved_chunks, rag_llm)
                         else:
-                            answer = "Failed to retrieve relevant information for RAG."
+                            answer = "Failed to load the RAG generation model."
                     else:
-                         # Modified error message for clarity
-                         answer = "Failed to set up RAG retrievers. Data loading or chunking may have failed."
+                        answer = "Failed to retrieve relevant information for RAG."
                 else:
-                    answer = "Failed to chunk documents for RAG (returned empty list)."
+                     answer = "Failed to set up RAG retrievers."
             else:
                 answer = "Failed to chunk documents for RAG."
         else:
