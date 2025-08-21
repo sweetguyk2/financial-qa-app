@@ -1,0 +1,469 @@
+{
+    "messages": [{
+            "role": "user",
+            "content": "What was the provision for credit losses in 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The provision for credit losses was $10,621 million in 202444."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the compensation expense in 2023?"
+        }, {
+            "role": "assistant",
+            "content": "Compensation expense was $37,605 million in 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How much was the total noninterest expense in 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The total noninterest expense was $82,890 million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the net interest income in 2022?"
+        }, {
+            "role": "assistant",
+            "content": "The net interest income was $68,422 million in 20227777."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What were the Investment securities losses in 2023?"
+        }, {
+            "role": "assistant",
+            "content": "Investment securities losses were $3,180 million in 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How did professional and outside services expense change from 2023 to 2024?"
+        }, {
+            "role": "assistant",
+            "content": "Professional and outside services expense increased from $6,798 million in 2023 to $7,220 million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the total net revenue in 2022?"
+        }, {
+            "role": "assistant",
+            "content": "Total net revenue was $118,977 million in 2022."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How much was the income tax expense for JPMorgan Chase Bank in 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The income tax expense was $15,313 million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the net income for 2022?"
+        }, {
+            "role": "assistant",
+            "content": "The net income was $34,342 million in 2022."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the investment banking fees revenue in 2022?"
+        }, {
+            "role": "assistant",
+            "content": "The investment banking fees revenue was $2,955 million in 2022."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the total noninterest revenue in 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The total noninterest revenue was $66,706 million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How much was the income before income tax expense in 2023?"
+        }, {
+            "role": "assistant",
+            "content": "Income before income tax expense was $59,565 million in 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the total comprehensive income for JPMorgan Chase Bank, National Association in 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The total comprehensive income was $50,548 million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How much was the total other comprehensive income/(loss) after-tax in 2023?"
+        }, {
+            "role": "assistant",
+            "content": "The total other comprehensive income after-tax was $7,770 million in 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What were the unrealized gains/(losses) on investment securities in 2022?"
+        }, {
+            "role": "assistant",
+            "content": "The unrealized losses on investment securities were $(11,751) million in 2022."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the comprehensive income in 2023?"
+        }, {
+            "role": "assistant",
+            "content": "Comprehensive income was $55,266 million in 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What were the translation adjustments, net of hedges, in 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The translation adjustments, net of hedges, were $(820) million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the value of cash flow hedges in 2023?"
+        }, {
+            "role": "assistant",
+            "content": "The value of cash flow hedges was $1,723 million in 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the total other comprehensive loss after-tax in 2022?"
+        }, {
+            "role": "assistant",
+            "content": "The total other comprehensive loss after-tax was $(18,142) million in 2022."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What were the total assets of JPMorgan Chase Bank, National Association as of December 31, 2024?"
+        }, {
+            "role": "assistant",
+            "content": "Total assets were $3,459,261 million as of December 31, 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How much were the total liabilities as of December 31, 2023?"
+        }, {
+            "role": "assistant",
+            "content": "Total liabilities were $3,095,847 million as of December 31, 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the value of loans, net of allowance for loan losses, as of December 31, 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The value was $1,321,348 million as of December 31, 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What were the total deposits in 2023?"
+        }, {
+            "role": "assistant",
+            "content": "Total deposits were $2,498,231 million as of December 31, 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How much was the total stockholder's equity at the end of 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The total stockholder's equity was $312,794 million at the end of 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the value of goodwill, mortgage servicing rights and other intangible assets as of December 31, 2023?"
+        }, {
+            "role": "assistant",
+            "content": "The value was $50,295 million as of December 31, 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the balance of held-to-maturity securities at the end of 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The balance of held-to-maturity securities was $274,468 million at the end of 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How did the allowance for loan losses change from 2023 to 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The allowance for loan losses increased from $(22,311) million in 2023 to $(24,293) million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What were the total assets as of December 31, 2022?"
+        }, {
+            "role": "assistant",
+            "content": "Total assets were $3,201,942 million as of December 31, 2022."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What were the deposits with banks at the end of 2024?"
+        }, {
+            "role": "assistant",
+            "content": "Deposits with banks were $444,672 million at the end of 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How much was the total liabilities and stockholder's equity as of December 31, 2023?"
+        }, {
+            "role": "assistant",
+            "content": "Total liabilities and stockholder's equity was $3,395,126 million as of December 31, 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the balance of retained earnings at the end of 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The balance of retained earnings was $203,493 million at the end of 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How much were the cash dividends paid to JPMorgan Chase & Co. in 2023?"
+        }, {
+            "role": "assistant",
+            "content": "Cash dividends paid to JPMorgan Chase & Co. were $61,000 million in 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the common stock balance at the end of 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The common stock balance was $2,028 million at the end of 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the accumulated other comprehensive loss at the end of 2023?"
+        }, {
+            "role": "assistant",
+            "content": "The accumulated other comprehensive loss was $(10,194) million at the end of 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How did the additional paid-in capital change from the beginning to the end of 2024?"
+        }, {
+            "role": "assistant",
+            "content": "Additional paid-in capital increased from $119,356 million to $119,421 million during 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the net income in 2024 according to the statements of changes in stockholder's equity?"
+        }, {
+            "role": "assistant",
+            "content": "The net income was $52,502 million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the balance of retained earnings at the beginning of 2023?"
+        }, {
+            "role": "assistant",
+            "content": "The balance of retained earnings was $201,263 million at the beginning of 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the net cash provided by operating activities in 2024?"
+        }, {
+            "role": "assistant",
+            "content": "Net cash provided by operating activities was $20,537 million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How much was the net cash provided by investing activities in 2023?"
+        }, {
+            "role": "assistant",
+            "content": "Net cash provided by investing activities was $64,116 million in 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the net cash used in financing activities in 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The net cash provided by financing activities was $15,362 million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How much were the cash and due from banks and deposits with banks at the end of 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The total was $467,876 million at the end of 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the net increase/(decrease) in cash and due from banks and deposits with banks in 2023?"
+        }, {
+            "role": "assistant",
+            "content": "There was a net increase of $56,517 million in 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How much was the provision for credit losses in 2024 according to the cash flow statement?"
+        }, {
+            "role": "assistant",
+            "content": "The provision for credit losses was $10,621 million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the net cash provided by operating activities in 2022?"
+        }, {
+            "role": "assistant",
+            "content": "Net cash provided by operating activities was $100,842 million in 2022."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the cash interest paid in 2024?"
+        }, {
+            "role": "assistant",
+            "content": "Cash interest paid was $73,825 million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How much were the proceeds from sales, securitizations and paydowns of loans held-for-sale in 2023?"
+        }, {
+            "role": "assistant",
+            "content": "The proceeds were $116,142 million in 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the net cash used in the First Republic acquisition in 2023?"
+        }, {
+            "role": "assistant",
+            "content": "Net cash used in the First Republic acquisition was $9,920 million in 2023."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How much were the dividends paid to JPMorgan Chase & Co. in 2024?"
+        }, {
+            "role": "assistant",
+            "content": "Dividends paid to JPMorgan Chase & Co. were $37,000 million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the net change in trading assets in 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The net change in trading assets was $(45,564) million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "How much was the net cash provided by/(used in) investing activities in 2022?"
+        }, {
+            "role": "assistant",
+            "content": "The net cash used in investing activities was $(111,914) million in 2022."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the net change in deposits in 2024?"
+        }, {
+            "role": "assistant",
+            "content": "The net change in deposits was $21,566 million in 2024."
+        }
+    ]
+}{
+    "messages": [{
+            "role": "user",
+            "content": "What was the cash income taxes paid, net, in 2023?"
+        }, {
+            "role": "assistant",
+            "content": "Cash income taxes paid, net, was $11,831 million in 2023."
+        }
+    ]
+}
