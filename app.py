@@ -123,7 +123,7 @@ def chunk_documents(_documents, chunk_size, chunk_overlap):
 
 # --- RAG Components ---
 @st.cache_resource
-def setup_rag_retrievers(documents, chunks, embedding_model_name, cohere_api_key):
+def setup_rag_retrievers(_documents, chunks, embedding_model_name, cohere_api_key):
     """Sets up the Chroma vector store, BM25 retriever, and Cohere re-ranker."""
     if not documents or not chunks:
         return None, None, None
@@ -351,7 +351,7 @@ if user_question:
         if documents:
             chunks = chunk_documents(documents, RAG_CHUNK_SIZE, RAG_CHUNK_OVERLAP)
             if chunks:
-                dense_retriever, sparse_retriever, reranker = setup_rag_retrievers(documents, chunks, RAG_EMBEDDING_MODEL, COHERE_API_KEY)
+                dense_retriever, sparse_retriever, reranker = setup_rag_retrievers(_documents, chunks, RAG_EMBEDDING_MODEL, COHERE_API_KEY)
                 if dense_retriever and sparse_retriever and reranker:
                     retrieved_chunks = hybrid_retrieval(user_question, dense_retriever, sparse_retriever, reranker)
                     if retrieved_chunks:
