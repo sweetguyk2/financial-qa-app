@@ -349,7 +349,7 @@ if user_question:
         # Load and process data for RAG
         documents = load_and_process_financial_data(FINANCIAL_DATA_PATH)
         if documents:
-            _chunks = chunk_documents(_documents, RAG_CHUNK_SIZE, RAG_CHUNK_OVERLAP)
+            _chunks = chunk_documents(documents, RAG_CHUNK_SIZE, RAG_CHUNK_OVERLAP)
             if _chunks:
                 dense_retriever, sparse_retriever, reranker = setup_rag_retrievers(_documents, _chunks, RAG_EMBEDDING_MODEL, COHERE_API_KEY)
                 if dense_retriever and sparse_retriever and reranker:
