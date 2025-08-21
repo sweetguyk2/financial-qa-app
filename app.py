@@ -53,8 +53,8 @@ RAG_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 RAG_GENERATION_MODEL = "distilgpt2" # Using distilgpt2 as in the notebook
 FT_MODEL_GPT2 = "gpt2-medium" # Using gpt2-medium as in the notebook
 FT_MODEL_FLAN_T5 = "google/flan-t5-small" # Using flan-t5-small as in the notebook
-FINETUNE_DATA_PATH = "/content/drive/My Drive/jpmc_finetune.jsonl" # Assuming this is accessible in the deployed environment or you'll adjust the path
-FINANCIAL_DATA_PATH = "/content/drive/My Drive/JPMC_Financials.xlsx" # Assuming this is accessible in the deployed environment or you'll adjust the path
+FINETUNE_DATA_PATH = "jpmc_finetune.jsonl" # Assuming this is accessible in the deployed environment or you'll adjust the path
+FINANCIAL_DATA_PATH = "JPMC_Financials.xlsx" # Assuming this is accessible in the deployed environment or you'll adjust the path
 
 # --- Data Loading and Processing ---
 @st.cache_resource
