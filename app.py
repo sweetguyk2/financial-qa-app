@@ -22,7 +22,8 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_community.retrievers import BM25Retriever
 from langchain.prompts import PromptTemplate
-from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
+# from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
+from langchain_huggingface import HuggingFacePipeline
 from langchain_cohere import CohereRerank
 import cohere
 import numpy as np
