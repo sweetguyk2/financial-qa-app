@@ -1,7 +1,3 @@
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-
 import streamlit as st
 import pandas as pd
 import torch
@@ -22,8 +18,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_community.retrievers import BM25Retriever
 from langchain.prompts import PromptTemplate
-# from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
-from langchain_huggingface import HuggingFacePipeline
+from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_cohere import CohereRerank
 import cohere
 import numpy as np
@@ -108,11 +103,11 @@ def chunk_documents(_documents, chunk_size, chunk_overlap):
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap
     )
-    _chunks = text_splitter.split_documents(_documents)
+    chunks = text_splitter.split_documents(_documents)
     processed_chunks = []
     source_id = "JPMC2024" # Or dynamically generate based on file name/timestamp
     size = chunk_size # Use the actual chunk size used
-    for i, chunk in enumerate(_chunks):
+    for i, chunk in enumerate(chunks):
         chunk_id = f"{source_id}_size{size}_chunk{i+1}"
         metadata = {
             "source_id": source_id,
@@ -128,16 +123,16 @@ def chunk_documents(_documents, chunk_size, chunk_overlap):
 
 # --- RAG Components ---
 @st.cache_resource
-def setup_rag_retrievers(_documents,_chunks, embedding_model_name, cohere_api_key):
+def setup_rag_retrievers(_documents, chunks, embedding_model_name, cohere_api_key):
     """Sets up the Chroma vector store, BM25 retriever, and Cohere re-ranker."""
-    if not _documents or not _chunks:
+    if not documents or not chunks:
         return None, None, None
 
     try:
         # Dense Retriever (ChromaDB)
         embeddings = HuggingFaceEmbeddings(model_name=embedding_model_name)
         vector_store = Chroma.from_documents(
-            documents=_chunks, # Use chunks for the vector store
+            documents=chunks, # Use chunks for the vector store
             embedding=embeddings
         )
         dense_retriever = vector_store.as_retriever(search_kwargs={"k": 5}) # Retrieve top 5 for dense
@@ -354,9 +349,9 @@ if user_question:
         # Load and process data for RAG
         documents = load_and_process_financial_data(FINANCIAL_DATA_PATH)
         if documents:
-            _chunks = chunk_documents(documents, RAG_CHUNK_SIZE, RAG_CHUNK_OVERLAP)
-            if _chunks:
-                dense_retriever, sparse_retriever, reranker = setup_rag_retrievers(documents, _chunks, RAG_EMBEDDING_MODEL, COHERE_API_KEY)
+            chunks = chunk_documents(documents, RAG_CHUNK_SIZE, RAG_CHUNK_OVERLAP)
+            if chunks:
+                dense_retriever, sparse_retriever, reranker = setup_rag_retrievers(_documents, chunks, RAG_EMBEDDING_MODEL, COHERE_API_KEY)
                 if dense_retriever and sparse_retriever and reranker:
                     retrieved_chunks = hybrid_retrieval(user_question, dense_retriever, sparse_retriever, reranker)
                     if retrieved_chunks:
