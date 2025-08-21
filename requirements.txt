@@ -1,0 +1,13 @@
+streamlit
+pandas
+torch
+transformers
+datasets
+langchain-community
+langchain-cohere
+chromadb
+pymupdf
+pypdf
+rank_bm25
+cohere
+numpy
