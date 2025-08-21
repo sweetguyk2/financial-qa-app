@@ -53,9 +53,8 @@ RAG_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 RAG_GENERATION_MODEL = "distilgpt2" # Using distilgpt2 as in the notebook
 FT_MODEL_GPT2 = "gpt2-medium" # Using gpt2-medium as in the notebook
 FT_MODEL_FLAN_T5 = "google/flan-t5-small" # Using flan-t5-small as in the notebook
-# Updated paths to use relative paths, assuming data files are in the same repo as app.py
-FINETUNE_DATA_PATH = "jpmc_finetune.jsonl"
-FINANCIAL_DATA_PATH = "JPMC_Financials.xlsx"
+FINETUNE_DATA_PATH = "/content/drive/My Drive/jpmc_finetune.jsonl" # Assuming this is accessible in the deployed environment or you'll adjust the path
+FINANCIAL_DATA_PATH = "/content/drive/My Drive/JPMC_Financials.xlsx" # Assuming this is accessible in the deployed environment or you'll adjust the path
 
 # --- Data Loading and Processing ---
 @st.cache_resource
@@ -96,15 +95,15 @@ def load_and_process_financial_data(file_path):
         return []
 
 @st.cache_resource
-def chunk_documents(documents, chunk_size, chunk_overlap):
+def chunk_documents(_documents, chunk_size, chunk_overlap):
     """Splits documents into chunks."""
-    if not documents:
+    if not _documents:
         return []
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap
     )
-    chunks = text_splitter.split_documents(documents)
+    chunks = text_splitter.split_documents(_documents)
     processed_chunks = []
     source_id = "JPMC2024" # Or dynamically generate based on file name/timestamp
     size = chunk_size # Use the actual chunk size used
@@ -350,7 +349,7 @@ if user_question:
         # Load and process data for RAG
         documents = load_and_process_financial_data(FINANCIAL_DATA_PATH)
         if documents:
-            chunks = chunk_documents(_documents, RAG_CHUNK_SIZE, RAG_CHUNK_OVERLAP)
+            chunks = chunk_documents(documents, RAG_CHUNK_SIZE, RAG_CHUNK_OVERLAP)
             if chunks:
                 dense_retriever, sparse_retriever, reranker = setup_rag_retrievers(documents, chunks, RAG_EMBEDDING_MODEL, COHERE_API_KEY)
                 if dense_retriever and sparse_retriever and reranker:
