@@ -132,7 +132,7 @@ def setup_rag_retrievers(_documents,_chunks, embedding_model_name, cohere_api_ke
         # Dense Retriever (ChromaDB)
         embeddings = HuggingFaceEmbeddings(model_name=embedding_model_name)
         vector_store = Chroma.from_documents(
-            documents=chunks, # Use chunks for the vector store
+            documents=_chunks, # Use chunks for the vector store
             embedding=embeddings
         )
         dense_retriever = vector_store.as_retriever(search_kwargs={"k": 5}) # Retrieve top 5 for dense
