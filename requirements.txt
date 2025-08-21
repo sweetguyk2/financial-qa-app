@@ -12,3 +12,4 @@ rank_bm25
 cohere
 numpy
 openpyxl
+sentence-transformers
