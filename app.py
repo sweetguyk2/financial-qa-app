@@ -348,7 +348,7 @@ if user_question:
     if model_choice == 'RAG System':
         # Load and process data for RAG
         documents = load_and_process_financial_data(FINANCIAL_DATA_PATH)
-        if _documents:
+        if documents:
             chunks = chunk_documents(_documents, RAG_CHUNK_SIZE, RAG_CHUNK_OVERLAP)
             if chunks:
                 dense_retriever, sparse_retriever, reranker = setup_rag_retrievers(_documents, chunks, RAG_EMBEDDING_MODEL, COHERE_API_KEY)
