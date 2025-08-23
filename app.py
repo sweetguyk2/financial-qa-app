@@ -25,33 +25,35 @@ from langchain_cohere import CohereRerank
 import cohere
 import numpy as np
 from streamlit.errors import StreamlitSecretNotFoundError
+from huggingface_hub import HfFolder # Import HfFolder to potentially get token
 
-# Mount Google Drive to access saved models
-from google.colab import drive
-drive.mount('/content/drive')
-
-
-# --- Global Settings ---
 RAG_CHUNK_SIZE = 1000
 RAG_CHUNK_OVERLAP = 200
 RAG_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 RAG_GENERATION_MODEL = "distilgpt2" # Placeholder for RAG generation model
 
-# Paths for fine-tuned models saved to Google Drive
-FT_MODEL_GPT2_PATH = "/content/drive/My Drive/gpt2-finetuned-model"
-FT_MODEL_FLAN_T5_PATH = "/content/drive/My Drive/flan-t5-finetuned-model"
+FT_MODEL_GPT2_PATH = "sweetguyk2/gpt2-finetuned-financial-qa" # Your Hugging Face repo ID
+FT_MODEL_FLAN_T5_PATH = "sweetguyk2/flan-t5-finetuned-financial-qa" # Your Hugging Face repo ID
 
 
-# Relative paths for deployment in Streamlit Community Cloud (These will need to be adjusted if models are bundled differently)
 FINETUNE_DATA_PATH = "jpmc_finetune.jsonl" # Used for data loading, not model loading in app
-FINANCIAL_DATA_PATH = "JPMC_Financials.xlsx"
+FINANCIAL_DATA_PATH = "JPMC_Financials.xlsx" # Ensure this file is in your repo for Streamlit Cloud
+
+HF_TOKEN = None
+try:
+    HF_TOKEN = st.secrets["HF_TOKEN"]
+except KeyError:
+    st.info("Hugging Face token not found in Streamlit secrets. Loading public models only.")
+except Exception as e:
+    st.error(f"An error occurred while accessing Hugging Face token: {e}")
 
 # --- Data Loading and Processing ---
-@st.cache_resource
+@st.cache_data
 def load_and_process_financial_data(file_path):
     """Loads financial data from Excel and converts it into text documents."""
+    # FIX: Check for file existence relative to the app's root for Streamlit Cloud
     if not os.path.exists(file_path):
-        st.error(f"Error: Financial data file not found at {file_path}. Please ensure the file is in the correct location.")
+        st.error(f"Error: Financial data file not found at {file_path}. Please ensure 'JPMC_Financials.xlsx' is in your application's repository.")
         return []
 
     documents = []
@@ -72,7 +74,6 @@ def load_and_process_financial_data(file_path):
                     value = row[year]
 
                     try:
-
                          formatted_value = f"${value:,}" if pd.notna(value) else "N/A"
                     except TypeError:
 
@@ -83,13 +84,14 @@ def load_and_process_financial_data(file_path):
         st.success(f"Successfully loaded and processed data from {file_path}")
         return documents
     except FileNotFoundError:
-        st.error(f"Error: Financial data file not found at {file_path}. This check should have caught it earlier, but adding here as a fallback.")
+        # This should be caught by the initial check, but keeping as fallback
+        st.error(f"Error: Financial data file not found at {file_path}.")
         return []
     except Exception as e:
         st.error(f"An error occurred while processing the financial data: {e}")
         return []
 
-@st.cache_resource
+@st.cache_data
 def chunk_documents(_documents, chunk_size, chunk_overlap):
     """Splits documents into chunks."""
     if not _documents:
@@ -121,7 +123,7 @@ def chunk_documents(_documents, chunk_size, chunk_overlap):
         return []
 
 # --- RAG Components ---
-@st.cache_resource
+@st.cache_data
 def setup_rag_retrievers(_documents, _chunks, embedding_model_name):
     """Sets up the Chroma vector store, BM25 retriever, and Cohere re-ranker."""
     if not _documents or not _chunks:
@@ -129,7 +131,6 @@ def setup_rag_retrievers(_documents, _chunks, embedding_model_name):
         return None, None, None
 
     # Set your Cohere API key from environment variables or Streamlit secrets
-
     COHERE_API_KEY = os.environ.get("COHERE_API_KEY")
     if not COHERE_API_KEY:
         try:
@@ -220,12 +221,13 @@ def hybrid_retrieval(query, dense_retriever, sparse_retriever, reranker):
         return []
 
 
-@st.cache_resource
-def setup_rag_llm(model_id):
+@st.cache_data
+def setup_rag_llm(model_id, token=None):
     """Sets up the generative LLM for RAG."""
     try:
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
-        model = AutoModelForCausalLM.from_pretrained(model_id)
+        # FIX: Pass token to from_pretrained
+        tokenizer = AutoTokenizer.from_pretrained(model_id, token=token)
+        model = AutoModelForCausalLM.from_pretrained(model_id, token=token)
 
         if tokenizer.pad_token_id is None:
             tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -282,16 +284,18 @@ def generate_rag_answer(query, retrieved_chunks, llm):
 
 
 # --- Fine-Tuned Model Components ---
-@st.cache_resource
-def load_fine_tuned_model(model_path, model_type):
-    """Loads the fine-tuned model and tokenizer from a specified path."""
+@st.cache_data
+def load_fine_tuned_model(model_path, model_type, token=None):
+    """Loads the fine-tuned model and tokenizer from a specified path or Hugging Face Hub ID."""
     try:
         if "flan-t5" in model_type.lower():
-             tokenizer = AutoTokenizer.from_pretrained(model_path)
-             model = AutoModelForSeq2SeqLM.from_pretrained(model_path)
+             # FIX: Pass token to from_pretrained
+             tokenizer = AutoTokenizer.from_pretrained(model_path, token=token)
+             model = AutoModelForSeq2SeqLM.from_pretrained(model_path, token=token)
         else: # Assuming GPT2 or similar causal language model
-            tokenizer = AutoTokenizer.from_pretrained(model_path)
-            model = AutoModelForCausalLM.from_pretrained(model_path)
+            # FIX: Pass token to from_pretrained
+            tokenizer = AutoTokenizer.from_pretrained(model_path, token=token)
+            model = AutoModelForCausalLM.from_pretrained(model_path, token=token)
             if tokenizer.pad_token_id is None:
                 tokenizer.pad_token = tokenizer.eos_token
 
@@ -365,6 +369,7 @@ if user_question:
 
     if model_choice == 'RAG System':
         # Load and process data for RAG
+        # Assuming FINANCIAL_DATA_PATH is relative to the app's root in Streamlit Cloud
         documents = load_and_process_financial_data(FINANCIAL_DATA_PATH)
         if documents:
             chunks = chunk_documents(documents, RAG_CHUNK_SIZE, RAG_CHUNK_OVERLAP)
@@ -374,7 +379,8 @@ if user_question:
                 retrieved_chunks = hybrid_retrieval(user_question, dense_retriever, sparse_retriever, reranker)
                 if retrieved_chunks:
                     # For the RAG system, we are using the base distilgpt2 model, not a fine-tuned one from a path
-                    rag_llm, rag_tokenizer = setup_rag_llm(RAG_GENERATION_MODEL)
+                    # FIX: Pass HF_TOKEN to setup_rag_llm
+                    rag_llm, rag_tokenizer = setup_rag_llm(RAG_GENERATION_MODEL, token=HF_TOKEN)
                     if rag_llm:
                         answer = generate_rag_answer(user_question, retrieved_chunks, rag_llm)
                     else:
@@ -388,7 +394,8 @@ if user_question:
 
     elif model_choice == 'Fine-Tuned GPT2-Medium':
          # Load fine-tuned GPT2 model from the saved path
-         ft_model_gpt2, ft_tokenizer_gpt2 = load_fine_tuned_model(FT_MODEL_GPT2_PATH, "gpt2-medium")
+         # FIX: Pass HF_TOKEN to load_fine_tuned_model
+         ft_model_gpt2, ft_tokenizer_gpt2 = load_fine_tuned_model(FT_MODEL_GPT2_PATH, "gpt2-medium", token=HF_TOKEN)
          if ft_model_gpt2 and ft_tokenizer_gpt2:
              answer = generate_ft_answer(user_question, ft_model_gpt2, ft_tokenizer_gpt2, "gpt2-medium")
          else:
@@ -396,7 +403,8 @@ if user_question:
 
     elif model_choice == 'Fine-Tuned Flan-T5 Small':
          # Load fine-tuned Flan-T5 model from the saved path
-         ft_model_flan_t5, ft_tokenizer_flan_t5 = load_fine_tuned_model(FT_MODEL_FLAN_T5_PATH, "flan-t5-small")
+         # FIX: Pass HF_TOKEN to load_fine_tuned_model
+         ft_model_flan_t5, ft_tokenizer_flan_t5 = load_fine_tuned_model(FT_MODEL_FLAN_T5_PATH, "flan-t5-small", token=HF_TOKEN)
          if ft_model_flan_t5 and ft_tokenizer_flan_t5:
              answer = generate_ft_answer(user_question, ft_model_flan_t5, ft_tokenizer_flan_t5, "flan-t5-small")
          else:
@@ -404,5 +412,3 @@ if user_question:
 
     st.subheader("Answer:")
     st.write(answer)
-# Mounting Google Drive as done above works in Colab but is not a typical deployment strategy
-# for Streamlit Community Cloud.
