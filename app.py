@@ -12,12 +12,10 @@ from transformers import (
     AutoModelForSeq2SeqLM,
     pipeline,
     Trainer,
-    TrainingArguments)
+    TrainingArguments,
+)
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_community.retrievers import BM25Retriever
@@ -26,36 +24,27 @@ from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_cohere import CohereRerank
 import cohere
 import numpy as np
-from streamlit.errors import StreamlitSecretNotFoundError
-from huggingface_hub import HfFolder # Import HfFolder to potentially get token
+from streamlit.errors import StreamlitSecretNotFoundError # Import the specific exception
 
+
+# --- Global Settings ---
 RAG_CHUNK_SIZE = 1000
 RAG_CHUNK_OVERLAP = 200
 RAG_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-RAG_GENERATION_MODEL = "distilgpt2" # Placeholder for RAG generation model
+RAG_GENERATION_MODEL = "distilgpt2" # Using distilgpt2 as in the notebook
+FT_MODEL_GPT2 = "gpt2-medium" # Using gpt2-medium as in the notebook
+FT_MODEL_FLAN_T5 = "google/flan-t5-small" # Using flan-t5-small as in the notebook
 
-FT_MODEL_GPT2_PATH = "sweetguyk2/gpt2-finetuned-financial-qa" # Your Hugging Face repo ID
-FT_MODEL_FLAN_T5_PATH = "sweetguyk2/flan-t5-finetuned-financial-qa" # Your Hugging Face repo ID
-
-
-FINETUNE_DATA_PATH = "jpmc_finetune.jsonl" # Used for data loading, not model loading in app
-FINANCIAL_DATA_PATH = "JPMC_Financials.xlsx" # Ensure this file is in your repo for Streamlit Cloud
-
-HF_TOKEN = None
-try:
-    HF_TOKEN = st.secrets["HF_TOKEN"]
-except KeyError:
-    st.info("Hugging Face token not found in Streamlit secrets. Loading public models only.")
-except Exception as e:
-    st.error(f"An error occurred while accessing Hugging Face token: {e}")
+# Relative paths for deployment in Streamlit Community Cloud
+FINETUNE_DATA_PATH = "jpmc_finetune.jsonl"
+FINANCIAL_DATA_PATH = "JPMC_Financials.xlsx"
 
 # --- Data Loading and Processing ---
-@st.cache_data
+@st.cache_resource
 def load_and_process_financial_data(file_path):
     """Loads financial data from Excel and converts it into text documents."""
-    # FIX: Check for file existence relative to the app's root for Streamlit Cloud
     if not os.path.exists(file_path):
-        st.error(f"Error: Financial data file not found at {file_path}. Please ensure 'JPMC_Financials.xlsx' is in your application's repository.")
+        st.error(f"Error: Financial data file not found at {file_path}. Please ensure the file is in the correct location.")
         return []
 
     documents = []
@@ -64,21 +53,22 @@ def load_and_process_financial_data(file_path):
         for sheet in xls.sheet_names:
             df = pd.read_excel(file_path, sheet_name=sheet)
             # Attempt to handle potential non-string column names for 'Item'
-            item_col = 'Item' if 'Item' in df.columns else df.columns[0]
+            item_col = 'Item' if 'Item' in df.columns else df.columns[0] # Assume the first column is the item if 'Item' is not found
 
             year_cols = [col for col in df.columns if isinstance(col, (int, float))]
 
             for _, row in df.iterrows():
                 item = row[item_col]
-                if pd.isna(item):
+                if pd.isna(item): # Skip rows with no item
                     continue
                 for year in year_cols:
                     value = row[year]
-
+                    # Format value carefully to avoid errors with different data types
                     try:
+                         # Attempt to format as number with commas
                          formatted_value = f"${value:,}" if pd.notna(value) else "N/A"
                     except TypeError:
-
+                         # If formatting fails, just use the raw value
                          formatted_value = str(value) if pd.notna(value) else "N/A"
 
                     sentence = f"{sheet} - Value for {item} in year {int(year)} is {formatted_value}"
@@ -86,14 +76,13 @@ def load_and_process_financial_data(file_path):
         st.success(f"Successfully loaded and processed data from {file_path}")
         return documents
     except FileNotFoundError:
-        # This should be caught by the initial check, but keeping as fallback
-        st.error(f"Error: Financial data file not found at {file_path}.")
+        st.error(f"Error: Financial data file not found at {file_path}. This check should have caught it earlier, but adding here as a fallback.")
         return []
     except Exception as e:
         st.error(f"An error occurred while processing the financial data: {e}")
         return []
 
-@st.cache_data
+@st.cache_resource
 def chunk_documents(_documents, chunk_size, chunk_overlap):
     """Splits documents into chunks."""
     if not _documents:
@@ -106,15 +95,15 @@ def chunk_documents(_documents, chunk_size, chunk_overlap):
         )
         chunks = text_splitter.split_documents(_documents)
         processed_chunks = []
-        source_id = "JPMC2024"
-        size = chunk_size
+        source_id = "JPMC2024" # Or dynamically generate based on file name/timestamp
+        size = chunk_size # Use the actual chunk size used
         for i, chunk in enumerate(chunks):
             chunk_id = f"{source_id}_size{size}_chunk{i+1}"
             metadata = {
                 "source_id": source_id,
                 "chunk_size": size,
                 "chunk_index": i + 1,
-                **chunk.metadata
+                **chunk.metadata # Include original document metadata if any
             }
             # Langchain's Document object expects page_content and metadata
             processed_chunks.append(Document(page_content=chunk.page_content, metadata={"chunk_id": chunk_id, **metadata}))
@@ -126,38 +115,39 @@ def chunk_documents(_documents, chunk_size, chunk_overlap):
 
 # --- RAG Components ---
 @st.cache_resource
-def setup_rag_retrievers(_documents, _chunks, embedding_model_name):
+def setup_rag_retrievers(_documents, _chunks, embedding_model_name): # Removed cohere_api_key from parameters, will access globally
     """Sets up the Chroma vector store, BM25 retriever, and Cohere re-ranker."""
     if not _documents or not _chunks:
         st.warning("Documents or chunks not available for setting up RAG retrievers.")
         return None, None, None
 
     # Set your Cohere API key from environment variables or Streamlit secrets
+    # Ensure you set this in your deployment environment
     COHERE_API_KEY = os.environ.get("COHERE_API_KEY")
     if not COHERE_API_KEY:
         try:
             COHERE_API_KEY = st.secrets["COHERE_API_KEY"]
         except StreamlitSecretNotFoundError:
             st.error("Cohere API key not found in environment variables or Streamlit secrets. Reranking will be skipped.")
-            COHERE_API_KEY = None
+            COHERE_API_KEY = None # Ensure it's None if not found
         except KeyError:
             st.error("Cohere API key not found in Streamlit secrets. Reranking will be skipped.")
-            COHERE_API_KEY = None
+            COHERE_API_KEY = None # Ensure it's None if not found
 
 
     try:
         # Dense Retriever (ChromaDB)
         embeddings = HuggingFaceEmbeddings(model_name=embedding_model_name)
         vector_store = Chroma.from_documents(
-            documents=_chunks,
+            documents=_chunks, # Use chunks for the vector store
             embedding=embeddings
         )
-        dense_retriever = vector_store.as_retriever(search_kwargs={"k": 5})
+        dense_retriever = vector_store.as_retriever(search_kwargs={"k": 5}) # Retrieve top 5 for dense
         st.success("Successfully set up Dense Retriever (ChromaDB).")
 
         # Sparse Retriever (BM25)
         sparse_retriever = BM25Retriever.from_documents(_documents)
-        sparse_retriever.k = 5
+        sparse_retriever.k = 5 # Retrieve top 5 for sparse
         st.success("Successfully set up Sparse Retriever (BM25).")
 
         # Re-ranker (Cohere)
@@ -166,13 +156,13 @@ def setup_rag_retrievers(_documents, _chunks, embedding_model_name):
             try:
                 reranker = CohereRerank(
                     cohere_api_key=COHERE_API_KEY,
-                    model="rerank-english-v3.0",
-                    top_n=3
+                    model="rerank-english-v3.0", # Use a suitable re-ranker model
+                    top_n=3 # Get top 3 after re-ranking
                 )
                 st.success("Successfully set up Cohere Re-ranker.")
             except Exception as e:
                 st.error(f"An error occurred while setting up Cohere Re-ranker: {e}")
-                reranker = None
+                reranker = None # Ensure it's None if setup fails
         else:
             st.info("Cohere API key not available. Skipping Cohere Re-ranker setup.")
 
@@ -212,24 +202,23 @@ def hybrid_retrieval(query, dense_retriever, sparse_retriever, reranker):
                 return reranked_docs
             except Exception as e:
                 st.error(f"An error occurred during Cohere re-ranking: {e}")
-
+                # If re-ranking fails, fall back to combined unranked candidates
                 return candidate_docs
         else:
             st.info("Cohere Re-ranker not available. Skipping re-ranking.")
-            return candidate_docs
+            return candidate_docs # Return combined candidates if reranker is None
 
     except Exception as e:
         st.error(f"An error occurred during hybrid retrieval: {e}")
         return []
 
 
-@st.cache_data
-def setup_rag_llm(model_id, token=None):
+@st.cache_resource
+def setup_rag_llm(model_id):
     """Sets up the generative LLM for RAG."""
     try:
-        # FIX: Pass token to from_pretrained
-        tokenizer = AutoTokenizer.from_pretrained(model_id, token=token)
-        model = AutoModelForCausalLM.from_pretrained(model_id, token=token)
+        tokenizer = AutoTokenizer.from_pretrained(model_id)
+        model = AutoModelForCausalLM.from_pretrained(model_id)
 
         if tokenizer.pad_token_id is None:
             tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -286,48 +275,40 @@ def generate_rag_answer(query, retrieved_chunks, llm):
 
 
 # --- Fine-Tuned Model Components ---
-@st.cache_data
-def load_fine_tuned_model(model_path, model_type, token=None):
-    """Loads the fine-tuned model and tokenizer from a specified path or Hugging Face Hub ID."""
+@st.cache_resource
+def load_fine_tuned_model(model_id):
+    """Loads the fine-tuned model and tokenizer."""
     try:
-        if "flan-t5" in model_type.lower():
-             # FIX: Pass token to from_pretrained
-             tokenizer = AutoTokenizer.from_pretrained(model_path, token=token)
-             model = AutoModelForSeq2SeqLM.from_pretrained(model_path, token=token)
-        else: # Assuming GPT2 or similar causal language model
-            # FIX: Pass token to from_pretrained
-            tokenizer = AutoTokenizer.from_pretrained(model_path, token=token)
-            model = AutoModelForCausalLM.from_pretrained(model_path, token=token)
+        if "flan-t5" in model_id.lower():
+             tokenizer = AutoTokenizer.from_pretrained(model_id)
+             model = AutoModelForSeq2SeqLM.from_pretrained(model_id)
+        else: # Assume causal LM like GPT-2
+            tokenizer = AutoTokenizer.from_pretrained(model_id)
+            model = AutoModelForCausalLM.from_pretrained(model_id)
             if tokenizer.pad_token_id is None:
                 tokenizer.pad_token = tokenizer.eos_token
 
-        st.success(f"Successfully loaded Fine-tuned model from {model_path}")
+        st.success(f"Successfully loaded Fine-tuned model: {model_id}")
         return model, tokenizer
     except Exception as e:
-        st.error(f"An error occurred while loading the fine-tuned model from {model_path}: {e}")
+        st.error(f"An error occurred while loading the fine-tuned model {model_id}: {e}")
         return None, None
 
-def generate_ft_answer(query, model, tokenizer, model_type):
+def generate_ft_answer(query, model, tokenizer, model_id):
     """Generates an answer using the fine-tuned model."""
     if not model or not tokenizer:
-        st.warning(f"Fine-tuned model or tokenizer not available for {model_type} answer generation.")
-        return f"Could not generate an answer using the fine-tuned {model_type} model."
+        st.warning(f"Fine-tuned model or tokenizer not available for {model_id} answer generation.")
+        return f"Could not generate an answer using the fine-tuned {model_id} model."
 
     try:
-        device = model.device # Get the device the model is on
-
-        if "flan-t5" in model_type.lower():
+        if "flan-t5" in model_id.lower():
              input_text = f"Question: {query}"
              inputs = tokenizer(input_text, return_tensors="pt", max_length=128, truncation=True)
-             # Move input tensors to the correct device
-             inputs = {name: tensor.to(device) for name, tensor in inputs.items()}
              output_tokens = model.generate(inputs["input_ids"], max_length=128)
              generated_answer = tokenizer.decode(output_tokens[0], skip_special_tokens=True)
-        else: # GPT2
+        else: # Assume causal LM (GPT-2)
             input_text = f"Question: {query}\nAnswer:"
             inputs = tokenizer(input_text, return_tensors="pt", max_length=128, truncation=True)
-            # Move input tensors to the correct device
-            inputs = {name: tensor.to(device) for name, tensor in inputs.items()}
             output_tokens = model.generate(
                 inputs['input_ids'],
                 max_length=128,
@@ -344,8 +325,8 @@ def generate_ft_answer(query, model, tokenizer, model_type):
 
         return generated_answer
     except Exception as e:
-        st.error(f"An error occurred during fine-tuned model inference for {model_type}: {e}")
-        return f"Could not generate an answer using the fine-tuned {model_type} model."
+        st.error(f"An error occurred during fine-tuned model inference for {model_id}: {e}")
+        return f"Could not generate an answer using the fine-tuned {model_id} model."
 
 
 # --- Streamlit App ---
@@ -371,18 +352,15 @@ if user_question:
 
     if model_choice == 'RAG System':
         # Load and process data for RAG
-        # Assuming FINANCIAL_DATA_PATH is relative to the app's root in Streamlit Cloud
         documents = load_and_process_financial_data(FINANCIAL_DATA_PATH)
         if documents:
             chunks = chunk_documents(documents, RAG_CHUNK_SIZE, RAG_CHUNK_OVERLAP)
             # Pass COHERE_API_KEY directly to setup_rag_retrievers
             dense_retriever, sparse_retriever, reranker = setup_rag_retrievers(documents, chunks, RAG_EMBEDDING_MODEL)
-            if dense_retriever and sparse_retriever:
+            if dense_retriever and sparse_retriever: # Check if basic retrievers are set up
                 retrieved_chunks = hybrid_retrieval(user_question, dense_retriever, sparse_retriever, reranker)
                 if retrieved_chunks:
-                    # For the RAG system, we are using the base distilgpt2 model, not a fine-tuned one from a path
-                    # FIX: Pass HF_TOKEN to setup_rag_llm
-                    rag_llm, rag_tokenizer = setup_rag_llm(RAG_GENERATION_MODEL, token=HF_TOKEN)
+                    rag_llm, rag_tokenizer = setup_rag_llm(RAG_GENERATION_MODEL)
                     if rag_llm:
                         answer = generate_rag_answer(user_question, retrieved_chunks, rag_llm)
                     else:
@@ -395,20 +373,16 @@ if user_question:
             answer = "Failed to load or process financial data."
 
     elif model_choice == 'Fine-Tuned GPT2-Medium':
-         # Load fine-tuned GPT2 model from the saved path
-         # FIX: Pass HF_TOKEN to load_fine_tuned_model
-         ft_model_gpt2, ft_tokenizer_gpt2 = load_fine_tuned_model(FT_MODEL_GPT2_PATH, "gpt2-medium", token=HF_TOKEN)
+         ft_model_gpt2, ft_tokenizer_gpt2 = load_fine_tuned_model(FT_MODEL_GPT2)
          if ft_model_gpt2 and ft_tokenizer_gpt2:
-             answer = generate_ft_answer(user_question, ft_model_gpt2, ft_tokenizer_gpt2, "gpt2-medium")
+             answer = generate_ft_answer(user_question, ft_model_gpt2, ft_tokenizer_gpt2, FT_MODEL_GPT2)
          else:
              answer = "Failed to load the fine-tuned GPT2-Medium model."
 
     elif model_choice == 'Fine-Tuned Flan-T5 Small':
-         # Load fine-tuned Flan-T5 model from the saved path
-         # FIX: Pass HF_TOKEN to load_fine_tuned_model
-         ft_model_flan_t5, ft_tokenizer_flan_t5 = load_fine_tuned_model(FT_MODEL_FLAN_T5_PATH, "flan-t5-small", token=HF_TOKEN)
+         ft_model_flan_t5, ft_tokenizer_flan_t5 = load_fine_tuned_model(FT_MODEL_FLAN_T5)
          if ft_model_flan_t5 and ft_tokenizer_flan_t5:
-             answer = generate_ft_answer(user_question, ft_model_flan_t5, ft_tokenizer_flan_t5, "flan-t5-small")
+             answer = generate_ft_answer(user_question, ft_model_flan_t5, ft_tokenizer_flan_t5, FT_MODEL_FLAN_T5)
          else:
               answer = "Failed to load the fine-tuned Flan-T5 Small model."
 
