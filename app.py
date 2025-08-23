@@ -12,8 +12,7 @@ from transformers import (
     AutoModelForSeq2SeqLM,
     pipeline,
     Trainer,
-    TrainingArguments,
-)
+    TrainingArguments)
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
