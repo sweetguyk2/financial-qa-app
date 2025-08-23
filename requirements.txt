@@ -14,5 +14,5 @@ numpy
 openpyxl
 sentence-transformers
 langchain-huggingface
-pysqlite3-binary==3.35
+pysqlite3-binary
 huggingface_hub
