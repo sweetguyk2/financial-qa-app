@@ -15,4 +15,3 @@ openpyxl
 sentence-transformers
 langchain-huggingface
 pysqlite3-binary
-huggingface_hub
