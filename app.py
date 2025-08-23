@@ -125,7 +125,7 @@ def chunk_documents(_documents, chunk_size, chunk_overlap):
         return []
 
 # --- RAG Components ---
-@st.cache_data
+@st.cache_resource
 def setup_rag_retrievers(_documents, _chunks, embedding_model_name):
     """Sets up the Chroma vector store, BM25 retriever, and Cohere re-ranker."""
     if not _documents or not _chunks:
